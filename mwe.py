@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as md
-
+from matplotlib.ticker import MultipleLocator, FuncFormatter, NullFormatter
 
 """
 Example of load calculation
@@ -102,6 +102,16 @@ print((df["waiting"] / pd.Timedelta(minutes=1)).describe())
 # .astype("timedelta64[m]") is that the latter just uses floor() on the numbers
 # print(df["waiting"].astype("timedelta64[m]").describe())
 
+# define days and
+days = ["mon", "tue", "wed", "thur", "fri", "sat", "sun"]
+
+def tick(x, pos):
+    """mpl.ticker.FuncFormatter(tick) expects tick to take two inputs, (x,pos)"""
+    if x % 24 == 12:
+        return days[int(x)//24]
+    else:
+        return ""
+
 ## histogram of waitinger
 plt.figure()
 (df["waiting"] / pd.Timedelta(minutes=1)).hist(bins=range(5, 45))
@@ -142,7 +152,7 @@ for day in range(7):
 plt.xlabel("Time på dagen")
 plt.ylabel("waiting (min)")
 plt.title("Waiting i gennemsnit over hver time")
-plt.legend(["mon", "tue", "wed", "thur", "fri", "sat", "sun"])
+plt.legend(days)
 
 ax = plt.gca()
 ax.yaxis.set_major_formatter(xfmt)
@@ -151,8 +161,65 @@ ax.set_ylim(bottom=0)
 plt.tight_layout()
 plt.savefig("fig/waiting_average_week.png")
 
+# plot average number of arrivals per weekday
+plt.figure()
+ax = plt.gca()
 
-plt.show()
-# plt.show(block=False)
+# plot each day in same color
+# df2.arrival.plot(ax=ax)
+
+# plot each day in a unique color
+for day in range(7):
+    plt.plot(range(24*day, 24*(day+1)), df2.waiting.xs(day))
+
+plt.grid()
+plt.xlabel("time")
+plt.ylabel("Number of people waiting")
+plt.title("Average number of people waiting per weekday")
+
+# Tick the x-axis with multiples of 24h
+ax.xaxis.set_major_locator(MultipleLocator(24))
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+ax.xaxis.set_major_formatter(NullFormatter())
+ax.xaxis.set_minor_formatter(FuncFormatter(tick))
+ax.xaxis.set_tick_params(width=15)
+ax.tick_params(which="major", axis="x", length=10, width=1.5)
+ax.grid(axis="x", which="major", lw=2)
+
+plt.savefig("fig/arrivals_average_week.png")
+
+
+# plot average number of loads per weekday
+plt.figure()
+ax = plt.gca()
+
+# plot each day in same color
+# df2.load.plot(ax=ax)
+
+# plot each day in a unique color
+for day in range(7):
+    plt.plot(range(24*day, 24*(day+1)), df2.load.xs(day))
+
+plt.grid()
+plt.xlabel("time")
+plt.ylabel("Average load")
+plt.title("Average number of load per weekday")
+
+# Tick the x-axis with multiples of 24h
+ax.xaxis.set_major_locator(MultipleLocator(24))
+ax.xaxis.set_minor_locator(MultipleLocator(1))
+ax.xaxis.set_major_formatter(NullFormatter())
+ax.xaxis.set_minor_formatter(FuncFormatter(tick))
+ax.xaxis.set_tick_params(width=15)
+ax.tick_params(which="major", axis="x", length=10, width=1.5)
+ax.grid(axis="x", which="major", lw=2)
+
+plt.savefig("fig/load_average_week.png")
+
+
+# plot.
+# plt.ion()
+# plt.show()
+plt.show(block=False)
 
 # print(df[df.index.day == 1])
